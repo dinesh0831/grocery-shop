@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static("cover"))
+app.use("/public",express.static(__dirname+../cover))
 
 
 app.use("/product",products)
