@@ -41,7 +41,7 @@ const UserService = {
                             error: "error on senting mail"
                         })
                     }
-                    res.send({ message: "email has been sent please activate your account" })
+                    res.send({ message: "Email has been sent to your registered email please activate your account" })
 
                 });
 
