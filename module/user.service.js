@@ -1,7 +1,7 @@
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Userlist = require("../schema/userScmema");
+const User = require("../schema/userScmema");
 const { registerSchema, logginSchema, resetSchema } = require("../schema/userValidation");
 const Cart = require("../schema/cartSchema")
 
@@ -10,7 +10,8 @@ const DOMAIN = process.env.mailgunDomain;
 const mg = mailgun({ apiKey: "9c4f011d75636f1882b03923dd7377af-7dcc6512-9c463b8e", domain: DOMAIN });
 
 const UserService = {
-    async registerVerification(req, res) {
+  
+    async register(req, res) {
         try {
             // validation
             let { email, mobileno, name, address, password } = req.body
@@ -18,51 +19,16 @@ const UserService = {
             if (error) {
                 return res.send({ message: "*validation failed", error })
             }
+             //password bcrypt
+             const salt = await bcrypt.genSalt();
+             password = await bcrypt.hash(password, salt)
+
             // check the email existing or not
-            await Userlist.findOne({ email: email }).exec(async (err, user) => {
+            await User.findOne({ email: email }).exec(async (err, user) => {
                 if (user) {
                     return res.send({ message: "*User already exist" });
                 }
-                // password bcrypt
-                const salt = await bcrypt.genSalt();
-                password = await bcrypt.hash(password, salt)
-                const token = await jwt.sign({ email, mobileno, name, address, password }, process.env.authkey, { expiresIn: "30m" })
-                const data = {
-                    from: ' groceryshop@order.com',
-                    to: email,
-                    subject: 'Email Verification',
-                    html: `
-                    <h2>Please click on given link to activate your account</h2>
-                    <p>${process.env.frontend}/email_verification/${token} </p>`
-                };
-                mg.messages().send(data, function (error, body) {
-                    if (error) {
-                        res.send({
-                            error: "error on senting mail"
-                        })
-                    }
-                    res.send({ message: "Email has been sent to your registered email please activate your account" })
-
-                });
-
-
-            })
-        }
-        catch (error) {
-            res.sendStatus(500)
-        }
-    },
-    async register(req, res) {
-        try {
-            // validation
-            let { email, mobileno, name, address, password } = req.body
-
-            // check the email existing or not
-            await Userlist.findOne({ email: email }).exec(async (err, user) => {
-                if (user) {
-                    return res.send({ message: "*User already exist" });
-                }
-                let users = new Userlist({
+                let users = new User({
                     email: email,
                     password: password,
                     name: name,
@@ -74,17 +40,13 @@ const UserService = {
 
 
                 const response = await users.save();
-
-
-
-
                 let carts = new Cart({
                     cart: [],
                     user: response._id
 
                 })
                 const cart = await carts.save()
-                res.send({ cart, response })
+                res.send({ cart, response,message:"*User successfully Registered" })
             })
 
             // insert register data
@@ -110,7 +72,7 @@ const UserService = {
 
 
             // email is registered or not
-            const user = await Userlist.findOne({ email: req.body.email }).exec()
+            const user = await User.findOne({ email: req.body.email }).exec()
             console.log(user)
             if (!user) return res.send({ message: "*User not exist" })
 
@@ -143,7 +105,7 @@ const UserService = {
             if (error)
                 return res.send({ message: "*validation failed" })
 
-            await Userlist.findOne({ email: email }).exec(async (err, user) => {
+            await User.findOne({ email: email }).exec(async (err, user) => {
                 console.log(user)
 
                 if (!user) {
@@ -187,7 +149,7 @@ const UserService = {
 
             const salt = await bcrypt.genSalt();
             password = await bcrypt.hash(password, salt)
-        const data=await Userlist.findOneAndUpdate({ email: email }, {
+        const data=await User.findOneAndUpdate({ email: email }, {
             password
         }, { new: true })
        
