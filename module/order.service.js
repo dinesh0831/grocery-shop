@@ -1,11 +1,17 @@
 const Order=require("../schema/orderSchema")
 const Cart=require("../schema/cartSchema");
+const razorpay=require("razorpay")
+var razor=new razorpay({
+  key_id: 'rzp_test_CJysw9ND9WCm9G',
+  key_secret: 'AVKtxudx3BsiyVjOmlgqCBVs',
+})
+
 
 
 
 exports.postOrder=async(req,res)=>{
 
-
+console.log(req.body)
   const  Orders=new Order({
         contact:req.body.contact,
         email:req.body.email,
@@ -14,12 +20,19 @@ exports.postOrder=async(req,res)=>{
         name:req.body.name
 
     })
+    const data=await razor.orders.create({
+      amount:req.body.amount*100,
+      currency:"INR",
+     
+
+    })
+    console.log(data)
     const Carts=await Cart.findOneAndUpdate({user:req.body.user},{
       cart:[]
     },{new:true})
     const response=await Orders.save()
    
-    res.send({response,Carts})
+    res.send({response,Carts,id:data.id,currency:"INR",amount:data.amount})
 
 
 }
