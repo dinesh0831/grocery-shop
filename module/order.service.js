@@ -5,7 +5,13 @@ var razor=new razorpay({
   key_id: 'rzp_test_CJysw9ND9WCm9G',
   key_secret: 'AVKtxudx3BsiyVjOmlgqCBVs',
 })
+exports.razorPay=async(req,res)=>{
+  const data= await razor.orders.create({
+    amount:req.body.amount*100,
+    currency:"INR", })
+    res.send({id:data.id,currency:"INR",amount:data.amount})
 
+}
 
 
 
@@ -20,13 +26,11 @@ console.log(req.body)
         name:req.body.name
 
     })
-    const data=await razor.orders.create({
-      amount:req.body.amount*100,
-      currency:"INR",
+    
      
 
-    })
-    console.log(data)
+   
+    
     const Carts=await Cart.findOneAndUpdate({user:req.body.user},{
       cart:[]
     },{new:true})
@@ -40,7 +44,7 @@ console.log(req.body)
 exports.getById=async(req,res)=>{
   console.log(req.user.user.email)
   const email=req.user.user.email
-  const response=await Order.findOne({email:email})
+  const response=await Order.find({email:email})
   res.send(response)
   
 }
